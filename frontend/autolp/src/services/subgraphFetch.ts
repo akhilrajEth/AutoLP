@@ -129,10 +129,10 @@ console.log('---');
 
 subgraphService.fetchUserData(testUser, testPool)
   .then(data => {
-    console.log('✅ Success! Found', data.length, 'liquidity modifications');
+    console.log('Success! Found', data.length, 'liquidity modifications');
     console.log('\nResults:');
     console.log(JSON.stringify(data, null, 2));
   })
   .catch(error => {
-    console.error('❌ Error:', error.message);
+    console.error('Error:', error.message);
   });
