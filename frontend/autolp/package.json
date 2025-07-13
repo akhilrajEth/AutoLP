@@ -9,8 +9,6 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@aws-sdk/client-dynamodb": "^3.844.0",
-    "@aws-sdk/lib-dynamodb": "^3.844.0",
     "@privy-io/react-auth": "^2.18.0",
     "@tanstack/react-query": "^5.83.0",
     "axios": "^1.10.0",
