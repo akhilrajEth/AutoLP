@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Header from "../components/Header";
 import PositionsList from "../components/PositionsList";
 import DepositForm from "../components/DepositForm";
@@ -15,6 +15,50 @@ export default function Home() {
     // Smooth scroll to top when switching tabs
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
+
+  interface PositionData {
+    userPublicAddress: string;
+    poolAddress: string;
+    token0Address: string;
+    token1Address: string;
+    token0LiquidityAmount: string;
+    token1LiquidityAmount: string;
+  }
+
+  const mockPositionData: PositionData = {
+    userPublicAddress: "0xTestUserWalletAddress123",
+    poolAddress: "0xTestPoolContractAddress456",
+    token0Address: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", // USDC
+    token1Address: "0x1C4CcA7C5DB003824208aDDA61Bd749e55F463a3", // GAME
+    token0LiquidityAmount: "10.5",
+    token1LiquidityAmount: "20000.0",
+  };
+
+  useEffect(() => {
+    const addPosition = async () => {
+      try {
+        const response = await fetch("/api/positions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(mockPositionData),
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+          console.log("API Response:", result);
+        } else {
+          console.error("API Error Details:", result);
+        }
+      } catch (err) {
+        console.error("Network/Unexpected Error:", err);
+      }
+    };
+
+    addPosition();
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50">
