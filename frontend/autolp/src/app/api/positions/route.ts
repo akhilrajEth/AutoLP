@@ -182,6 +182,38 @@ async function addActivePositionInDynamo(
 }
 
 /**
+ * Fetches all positions for a given user from DynamoDB.
+ * @param userPublicAddress The public address of the user.
+ * @returns A promise that resolves to an array of Position objects.
+ */
+async function getPositionByUserPublicAddress(
+  userPublicAddress: string
+): Promise<Position[]> {
+  const params = {
+    TableName: "positions",
+    KeyConditionExpression: "#userPublicAddress = :userPublicAddress",
+    ExpressionAttributeNames: {
+      "#userPublicAddress": "userPublicAddress", // Attribute name for partition key
+    },
+    ExpressionAttributeValues: {
+      ":userPublicAddress": userPublicAddress, // Value for the partition key
+    },
+  };
+
+  try {
+    const command = new QueryCommand(params);
+    const response = await docClient.send(command);
+
+    console.log("Query Results:", response.Items);
+
+    return (response.Items as Position[]) || [];
+  } catch (error) {
+    console.error("Error fetching positions for user:", error);
+    throw error;
+  }
+}
+
+/**
  * POST handler for /api/positions
  * Adds a new active liquidity position to DynamoDB after fetching initial token prices.
  *
@@ -240,6 +272,39 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         error: "Failed to add liquidity position",
+        details: (error as Error).message,
+      },
+      { status: 500 }
+    );
+  }
+}
+
+/**
+ * GET handler for /api/positions
+ * Fetches all positions for a given user from DynamoDB.
+ * Expects 'userPublicAddress' as a query parameter.
+ * Example: GET /api/positions?userPublicAddress=0xabcdef123...
+ */
+export async function GET(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const userPublicAddress = searchParams.get("userPublicAddress");
+
+    if (!userPublicAddress) {
+      return NextResponse.json(
+        { error: 'Missing "userPublicAddress" query parameter.' },
+        { status: 400 }
+      );
+    }
+
+    const positions = await getPositionByUserPublicAddress(userPublicAddress);
+
+    return NextResponse.json(positions, { status: 200 });
+  } catch (error) {
+    console.error("API GET /api/positions error:", error);
+    return NextResponse.json(
+      {
+        error: "Failed to retrieve liquidity positions",
         details: (error as Error).message,
       },
       { status: 500 }
