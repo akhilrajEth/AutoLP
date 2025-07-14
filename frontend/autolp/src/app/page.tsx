@@ -16,49 +16,87 @@ export default function Home() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  interface PositionData {
-    userPublicAddress: string;
-    poolAddress: string;
-    token0Address: string;
-    token1Address: string;
-    token0LiquidityAmount: string;
-    token1LiquidityAmount: string;
-  }
+  // To-Do: Delete testing logic for position creation and fetching once done with testing
 
-  const mockPositionData: PositionData = {
-    userPublicAddress: "0xTestUserWalletAddress123",
-    poolAddress: "0xTestPoolContractAddress456",
-    token0Address: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", // USDC
-    token1Address: "0x1C4CcA7C5DB003824208aDDA61Bd749e55F463a3", // GAME
-    token0LiquidityAmount: "10.5",
-    token1LiquidityAmount: "20000.0",
-  };
+  // interface Position {
+  //   userPublicAddress: string;
+  //   poolAddress: string;
+  //   token0Address: string;
+  //   token1Address: string;
+  //   token0LiquidityAmount: number;
+  //   token1LiquidityAmount: number;
+  //   token0InitialPrice: number;
+  //   token1InitialPrice: number;
+  //   createdAt: string;
+  // }
 
-  useEffect(() => {
-    const addPosition = async () => {
-      try {
-        const response = await fetch("/api/positions", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(mockPositionData),
-        });
+  // interface PositionData {
+  //   userPublicAddress: string;
+  //   poolAddress: string;
+  //   token0Address: string;
+  //   token1Address: string;
+  //   token0LiquidityAmount: string;
+  //   token1LiquidityAmount: string;
+  // }
 
-        const result = await response.json();
+  // const mockPositionData: PositionData = {
+  //   userPublicAddress: "0xTestUserWalletAddress123",
+  //   poolAddress: "0xTestPoolContractAddress456",
+  //   token0Address: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", // USDC
+  //   token1Address: "0x1C4CcA7C5DB003824208aDDA61Bd749e55F463a3", // GAME
+  //   token0LiquidityAmount: "10.5",
+  //   token1LiquidityAmount: "20000.0",
+  // };
 
-        if (response.ok) {
-          console.log("API Response:", result);
-        } else {
-          console.error("API Error Details:", result);
-        }
-      } catch (err) {
-        console.error("Network/Unexpected Error:", err);
-      }
-    };
+  // useEffect(() => {
+  //   const addPosition = async () => {
+  //     try {
+  //       const response = await fetch("/api/positions", {
+  //         method: "POST",
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //         },
+  //         body: JSON.stringify(mockPositionData),
+  //       });
 
-    addPosition();
-  }, []);
+  //       const result = await response.json();
+
+  //       if (response.ok) {
+  //         console.log("API Response:", result);
+  //       } else {
+  //         console.error("API Error Details:", result);
+  //       }
+  //     } catch (err) {
+  //       console.error("Network/Unexpected Error:", err);
+  //     }
+  //   };
+
+  //   addPosition();
+  // }, []);
+
+  // const mockUserAddress = "0xTestUserWalletAddress123";
+
+  // useEffect(() => {
+  //   const fetchPositions = async () => {
+  //     try {
+  //       const response = await fetch(
+  //         `/api/positions?userPublicAddress=${mockUserAddress}`
+  //       );
+
+  //       if (!response.ok) {
+  //         const errorData = await response.json();
+  //         throw new Error(errorData.error || "Failed to fetch positions");
+  //       }
+
+  //       const data: Position[] = await response.json();
+  //       console.log("Fetched Positions:", data);
+  //     } catch (err) {
+  //       console.error("Fetch error:", err);
+  //     }
+  //   };
+
+  //   fetchPositions();
+  // }, []);
 
   return (
     <div className="min-h-screen bg-gray-50">
