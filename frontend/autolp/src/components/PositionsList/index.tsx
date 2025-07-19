@@ -1,11 +1,11 @@
 import { usePrivy } from "@privy-io/react-auth";
 import { Wallet, AlertCircle } from "lucide-react";
-import { usePositions, usePoolInfo } from "@/hooks/usePositions";
+import { usePositions, usePoolInfo, useInchPositions } from "@/hooks/usePositions";
 import PositionCard from "../PositionCard";
 
 export default function PositionsList() {
   const { authenticated, ready } = usePrivy();
-  const { data: positions, isLoading, error } = usePositions();
+  const { data: positions, isLoading, error } = useInchPositions();
   const { data: poolInfo } = usePoolInfo(
     "0x8ad599c3A0ff1De082011EFDDc58f1908eb6e6D8"
   );
@@ -112,8 +112,8 @@ export default function PositionsList() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {positions.map((position) => (
           <PositionCard
-            key={position.id}
-            position={position}
+            key={position.index}
+            inchPosition={position}
             currentPrices={currentPrices}
           />
         ))}
