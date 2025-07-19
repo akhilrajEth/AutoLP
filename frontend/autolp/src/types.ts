@@ -16,6 +16,53 @@ export interface Position {
   };
 }
 
+// 1inch API Types
+export interface TokenBalance {
+  chain_id: number;
+  address: string;
+  decimals: number;
+  symbol?: string | null;
+  name?: string | null;
+  amount: number;
+  price_usd?: number | null;
+  value_usd?: number | null;
+}
+
+export interface HistoryMetrics {
+  index: string;
+  profit_abs_usd?: number | null;
+  roi?: number | null;
+  weighted_apr?: number | null;
+  holding_time_days?: number | null;
+  rewards_tokens?: TokenBalance[] | null;
+  rewards_usd?: number | null;
+  claimed_fees?: TokenBalance[] | null;
+  unclaimed_fees?: TokenBalance[] | null;
+  impermanent_loss?: TokenBalance[] | null;
+  claimed_fees_usd?: number | null;
+  unclaimed_fees_usd?: number | null;
+  impermanent_loss_usd?: number | null;
+}
+
+export interface ProcessingInfo {
+  click_time: number;
+  node_time: number;
+  microservices_time: number;
+  redis_time: number;
+  total_time: number;
+}
+
+export interface ResponseMeta {
+  cached_at?: number | null;
+  system?: ProcessingInfo | null;
+}
+
+export interface PortfolioResponse {
+  result: HistoryMetrics[];
+  meta?: ResponseMeta | null;
+}
+//: end of 1inch API Types
+
 export interface PoolInfo {
   address: string;
   token0: string;

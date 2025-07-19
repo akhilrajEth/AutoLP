@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { usePrivy } from "@privy-io/react-auth";
-import { Position, ImpermanentLossData, YieldData } from "../types";
+import { Position, ImpermanentLossData, YieldData, HistoryMetrics, PortfolioResponse } from "../types";
 
 // Mock data for demonstration
 const mockPositions: Position[] = [
@@ -36,6 +36,75 @@ const mockPoolInfo = {
   token1Price: 1, // Current USDC price
 };
 
+function convertHistoryMetricsToPosition(metric: HistoryMetrics): Position {
+  const token0 = metric.claimed_fees?.[0] || metric.impermanent_loss?.[0];
+  const token1 = metric.claimed_fees?.[1] || metric.impermanent_loss?.[1];
+  
+  return {
+    id: metric.index,
+    token0: token0?.address || "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee", // ETH
+    token1: token1?.address || "0x078d782b760474a361dda0af3839290b0ef57ad6", // USDC
+    liquidity: "0", // Not available in 1inch data
+    feeGrowthInside0LastX128: "0",
+    feeGrowthInside1LastX128: "0",
+    tokensOwed0: "0",
+    tokensOwed1: "0",
+    tickLower: 0,
+    tickUpper: 0,
+    depositedAt: new Date(Date.now() - (metric.holding_time_days || 0) * 24 * 60 * 60 * 1000),
+    depositPrices: {
+      token0Price: token0?.price_usd || 3554.92, // Current ETH price
+      token1Price: token1?.price_usd || 1, // USDC price
+    },
+  };
+}
+
+export function useInchPositions() {
+  const { user, authenticated } = usePrivy();
+  const address = user?.wallet?.address;
+
+  return useQuery({
+    queryKey: ["inch-positions", address],
+    queryFn: async (): Promise<HistoryMetrics[]> => {
+      if (!address || !authenticated) return [];
+
+      try {
+        console.log("Fetching positions for address:", address);
+        const response = await fetch(`/api/positions?userPublicAddress=${address}`);
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error("API Error:", response.status, errorText);
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log("API Response:", data);
+        
+        if (!data.success) {
+          throw new Error(data.error || "Failed to fetch positions");
+        }
+
+        // Return only positions with actual data
+        const filteredPositions = data.data.result.filter((metric: HistoryMetrics) => 
+          metric.profit_abs_usd !== null || 
+          metric.claimed_fees_usd !== null || 
+          metric.impermanent_loss_usd !== null
+        );
+
+        console.log("Filtered positions:", filteredPositions.length);
+        return filteredPositions;
+      } catch (error) {
+        console.error("Error fetching positions:", error);
+        return [];
+      }
+    },
+    enabled: !!address && authenticated,
+    retry: 2,
+    retryDelay: 1000,
+  });
+}
+
 export function usePositions() {
   const { user, authenticated } = usePrivy();
   const address = user?.wallet?.address;
@@ -43,13 +112,35 @@ export function usePositions() {
   return useQuery({
     queryKey: ["positions", address],
     queryFn: async (): Promise<Position[]> => {
-      // In a real app, this would fetch from a subgraph or API
       if (!address || !authenticated) return [];
 
-      // Simulate API delay
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      try {
+        const response = await fetch(`/api/positions?userPublicAddress=${address}`);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (!data.success) {
+          throw new Error(data.error || "Failed to fetch positions");
+        }
 
-      return mockPositions;
+        // Convert 1inch API response to Position format
+        const positions = data.data.result
+          .filter((metric: HistoryMetrics) => 
+            metric.profit_abs_usd !== null || 
+            metric.claimed_fees_usd !== null || 
+            metric.impermanent_loss_usd !== null
+          )
+          .map(convertHistoryMetricsToPosition);
+
+        return positions;
+      } catch (error) {
+        console.error("Error fetching positions:", error);
+        return [];
+      }
     },
     enabled: !!address && authenticated,
   });
@@ -67,12 +158,16 @@ export function usePoolInfo(poolAddress: string) {
 }
 
 export function useImpermanentLoss(
-  position: Position,
+  position: Position | undefined,
   currentPrices: { token0Price: number; token1Price: number }
 ) {
   return useQuery({
-    queryKey: ["impermanent-loss", position.id, currentPrices],
+    queryKey: ["impermanent-loss", position?.id, currentPrices],
     queryFn: async (): Promise<ImpermanentLossData> => {
+      if (!position) {
+        throw new Error("Position is required");
+      }
+      
       const token0Amount = (parseFloat(position.liquidity) / 1e18) * 0.5; // Simplified calculation
       const token1Amount =
         (parseFloat(position.liquidity) / 1e18) *
@@ -92,10 +187,14 @@ export function useImpermanentLoss(
   });
 }
 
-export function useYield(position: Position) {
+export function useYield(position: Position | undefined) {
   return useQuery({
-    queryKey: ["yield", position.id],
+    queryKey: ["yield", position?.id],
     queryFn: async (): Promise<YieldData> => {
+      if (!position) {
+        throw new Error("Position is required");
+      }
+      
       const daysSinceDeposit =
         (Date.now() - position.depositedAt.getTime()) / (1000 * 60 * 60 * 24);
       const feesEarned =
